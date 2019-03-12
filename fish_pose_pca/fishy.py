@@ -50,14 +50,7 @@ class FishBlob:
         selector = sorted(random.sample(range(0,self.length),newSize))
         self.X, self.Y = self.X[selector],self.Y[selector]
         self.length = newSize
-    
-    
-def randomSubfishes(fishes, subarrayLen):
-    ret = np.empty((len(fishes),2,subarrayLen))
-    for i,fish in enumerate(fishes):
-        selector =sorted(random.sample(range(0,len(fish[0])),subarrayLen))
-        ret[i][0],ret[i][1] = fish[0][selector],fish[1][selector]
-    return ret
+
 
 def normalizeFish(X,Y,c):
     nFish = FishBlob(X=X,Y=Y,centroid=c)
