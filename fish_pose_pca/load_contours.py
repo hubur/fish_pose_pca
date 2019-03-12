@@ -4,6 +4,7 @@ from typing import List
 import numpy as np
 import cv2
 
+
 class Contour:
     def __init__(self, data: List):
         self.xs = np.array([d["x"] for d in data])
