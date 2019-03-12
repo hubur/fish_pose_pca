@@ -1,3 +1,6 @@
+"""object representation of a fish blob and surrounding utlity."""
+
+from load_contours import load_contours
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -50,34 +53,41 @@ class FishBlob:
         selector = sorted(random.sample(range(0,self.length),newSize))
         self.X, self.Y = self.X[selector],self.Y[selector]
         self.length = newSize
-
-
-def normalizeFish(X,Y,c):
-    nFish = FishBlob(X=X,Y=Y,centroid=c)
-    
-    #Normalize Contour Start
-    tailIndex = nFish.argFurthestPointFromCentroid()
-    nFish.shiftContourStart(tailIndex)
-    
-    #Normalize Position
-    nFish.translate(vector=-1*nFish.centroid)
-    
-    #Normalize Rotation
-    nFish.rotate(math.degrees(nFish.getAngleOfPoint(np.array([nFish.X[0],nFish.Y[0]]))))
-
-    return nFish
+        
+    def normalize(self):
+        #Normalize Contour Start
+        tailIndex = self.argFurthestPointFromCentroid()
+        self.shiftContourStart(tailIndex)
+        
+        #Normalize Position
+        self.translate(vector=-1*self.centroid)
+        
+        #Normalize Rotation
+        self.rotate(math.degrees(self.getAngleOfPoint(np.array([self.X[0],self.Y[0]]))))
            
     
-def printFish(fishBlob,canvasSize=200):
-    blob = copy.copy(fishBlob)
-    blob.translate(np.array([canvasSize//2,canvasSize//2]))
-    X,Y = blob.X, blob.Y
-    dist = blob.getDistancesFromCentroid()
-    canvas=np.zeros((canvasSize,canvasSize))
-    canvas[Y[:20].astype(int),X[:20].astype(int)] = 140
-    canvas[Y[20:].astype(int),X[20:].astype(int)] = 255
-    #canvas[Y.astype(int),X.astype(int)] = dist
-    #canvas[fishBlob.centroid[0]-3:fishBlob.centroid[0]+3,fishBlob.centroid[1]-3:fishBlob.centroid[1]+3] = 90
-    plt.figure(figsize=(15,15))
-    plt.imshow(canvas,cmap="gray")
-    plt.show()
+def get_fish_on_canvas(fish_blob=None, xy_representation=None, canvas_size=(200, 200)):
+    """
+    canvasSize = (y size, x size)
+
+    """
+    canvas=np.zeros(canvas_size)
+    
+    if fish_blob is not None:
+        blob = copy.copy(fish_blob)
+        blob.translate(np.array([canvas_size[1]//2,canvas_size[0]//2]))
+        X,Y = blob.X, blob.Y
+        canvas[Y.astype(int),X.astype(int)] = 255
+    elif xy_representation is not None:
+        X,Y = xy_representation + np.array([[canvas_size[1] // 2], [canvas_size[0] // 2]])
+        canvas[Y.astype(int),X.astype(int)] = 255
+    return canvas
+
+def get_normalized_fish_blobs_from_data(data_path, mask_path):
+    data = load_contours(path=data_path,mask_path=mask_path)
+    allBlobs = []
+    for d in data:
+        fish = FishBlob(np.array(d.xs),np.array(d.ys),np.array([d.c_x,d.c_y]))
+        fish.normalize()
+        allBlobs.append(fish)
+    return allBlobs

@@ -3,8 +3,6 @@ import json
 from typing import List
 import numpy as np
 import cv2
-from skimage.io import imread
-
 
 class Contour:
     def __init__(self, data: List):
@@ -33,7 +31,8 @@ def load_contours(path: str, mask_path: str = None, threshold: float = 0.5):
                    lower values allow some contour points to be outside.
     """
     if mask_path:
-        arena_mask = imread(mask_path, as_gray=True)
+        arena_mask = cv2.imread(mask_path)
+        arena_mask = cv2.cvtColor(arena_mask, cv2.COLOR_BGR2GRAY)
     with open(path) as data:
         lines = data.readlines()
     contours = []
