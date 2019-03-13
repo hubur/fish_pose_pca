@@ -2,7 +2,6 @@
 
 from load_contours import load_contours
 import numpy as np
-import matplotlib.pyplot as plt
 import random
 import cv2
 import math

@@ -3,6 +3,7 @@ import json
 from typing import List
 import numpy as np
 import cv2
+import config
 
 
 class Contour:
@@ -20,7 +21,7 @@ def _get_contours(line: str):
     return [Contour(c) for c in json.loads(line)]
 
 
-def load_contours(path: str, mask_path: str = None, threshold: float = 0.5):
+def load_contours(path: str = None, mask_path: str = None, threshold: float = None):
     """load contours from biotracker export.
     Args:
         path:      path of exported jsonl file
@@ -31,16 +32,24 @@ def load_contours(path: str, mask_path: str = None, threshold: float = 0.5):
                    whith threshold = 1, all points need to be in the arena,
                    lower values allow some contour points to be outside.
     """
+    if not path:
+        path = config.get_contour_data_path()
+    if not threshold:
+        threshold = config.get_mask_threshold()
+    if not mask_path:
+        mask_path = config.get_mask_path()
     if mask_path:
         arena_mask = cv2.imread(mask_path)
         arena_mask = cv2.cvtColor(arena_mask, cv2.COLOR_BGR2GRAY)
     with open(path) as data:
         lines = data.readlines()
     contours = []
+    min_points = config.get_min_contour_points()
     for line in lines:
         for data in json.loads(line):
             contour = Contour(data)
-            if mask_path and (np.mean(arena_mask[contour.ys, contour.xs]) < threshold):
+            outside_arena = mask_path and (np.mean(arena_mask[contour.ys, contour.xs]) < threshold)
+            if outside_arena or contour.xs.shape[0] < min_points:
                 continue
             contours.append(contour)
     return contours

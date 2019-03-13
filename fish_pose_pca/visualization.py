@@ -12,6 +12,6 @@ def save_video_frames(parameters: List, fun: Callable, out_folder: str):
         out_path.mkdir()
     for i, parameter in enumerate(parameters):
         img = fun(parameter)
-        plt.imshow(img)
+        plt.imshow(img, cmap="gray")
         frame_name = f"{i}.png"
         plt.savefig(str(out_path / frame_name))
