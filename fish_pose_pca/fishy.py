@@ -77,7 +77,7 @@ class FishBlob:
         self.rotate(math.degrees(self.get_angle_of_point(np.array([self.X[0], self.Y[0]]))))
 
 
-def get_fish_on_canvas(fish_blob=None, xy_representation=None, canvas_size=(200, 200)):
+def get_fish_on_canvas(fish_blob: FishBlob = None, xy_array: np.ndarray = None, canvas_size=(200, 200)):
     """
     canvasSize = (y size, x size)
 
@@ -89,8 +89,9 @@ def get_fish_on_canvas(fish_blob=None, xy_representation=None, canvas_size=(200,
         blob.translate(np.array([canvas_size[1] // 2, canvas_size[0] // 2]))
         X, Y = blob.X, blob.Y
         canvas[Y.astype(int), X.astype(int)] = 255
-    elif xy_representation is not None:
-        X, Y = xy_representation + np.array([[canvas_size[1] // 2], [canvas_size[0] // 2]])
+    elif xy_array is not None:
+        half = xy_array.shape[0] // 2
+        X, Y = xy_array[:half] + np.array([canvas_size[1] // 2]), xy_array[half:] + np.array([canvas_size[0] // 2])
         canvas[Y.astype(int), X.astype(int)] = 255
     return canvas
 
