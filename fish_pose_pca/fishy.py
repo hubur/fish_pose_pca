@@ -6,6 +6,7 @@ import random
 import cv2
 import math
 import copy
+import config
 
 
 class FishBlob:
@@ -60,20 +61,36 @@ class FishBlob:
         return math.atan2(y, x)
 
     def reduce_to_subfish(self, new_size):
-        selector = sorted(random.sample(range(0, self.length), new_size))
-        self.X, self.Y = self.X[selector], self.Y[selector]
-        self.length = new_size
+        subfish_method = config.get_subfish_method()
+        if subfish_method == config.SubFishMethod.RANDOM_SUBSET:
+            selector = sorted(random.sample(range(0, self.length), new_size))
+            self.X, self.Y = self.X[selector], self.Y[selector]
+            self.length = new_size
+        else:
+            raise NotImplementedError(subfish_method)
 
     def normalize(self):
         # Normalize Contour Start
-        tailIndex = self.arg_furthest_point_from_centroid()
-        self.shift_contour_start(tailIndex)
+        contour_start = config.get_contour_start()
+        if contour_start == config.ContourStart.MOST_DISTANT_FROM_CENTER_OF_MASS:
+            tail_index = self.arg_furthest_point_from_centroid()
+            self.shift_contour_start(tail_index)
+        else:
+            raise NotImplementedError(contour_start)
 
         # Normalize Position
-        self.translate(vector=-1 * self.centroid)
+        translation_method = config.get_translation_method()
+        if translation_method == config.TranslationMethod.CENTER_OF_MASS_ON_ZERO:
+            self.translate(vector=-1 * self.centroid)
+        else:
+            raise NotImplementedError(translation_method)
 
         # Normalize Rotation
-        self.rotate(math.degrees(self.get_angle_of_point(np.array([self.X[0], self.Y[0]]))))
+        rotation_method = config.get_rotation_method()
+        if rotation_method == config.RotationMethod.MOST_DISTANT_POINT_AND_CENTER_ON_LINE:
+            self.rotate(math.degrees(self.get_angle_of_point(np.array([self.X[0], self.Y[0]]))))
+        else:
+            raise NotImplementedError(rotation_method)
 
 
 def get_fish_on_canvas(fish_blob: FishBlob = None, xy_array: np.ndarray = None, canvas_size=(200, 200)):
