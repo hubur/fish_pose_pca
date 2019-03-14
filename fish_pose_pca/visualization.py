@@ -22,7 +22,8 @@ def save_video_frames(parameters: List, fun: Callable, out_folder: str):
         plt.savefig(str(out_path / frame_name))
 
 
-def print_reconstruction_compare(pca_object, pca_input, transformed_fishes, n_components, fish_index):
+def print_reconstruction_compare(pca_object, pca_input, transformed_fishes, fish_index):
+    n_components = pca_object.n_components
     fig, axes = plt.subplots(ncols=2, nrows=1, sharey=True)
     old, new = fishy.get_fish_on_canvas(xy_array=pca_input[fish_index]), fishy.get_fish_on_canvas(
         xy_array=pca_object.inverse_transform(transformed_fishes[fish_index]))
@@ -35,7 +36,7 @@ def print_reconstruction_compare(pca_object, pca_input, transformed_fishes, n_co
     plt.show()
 
 
-def print_min_max_fishes(pca_object, pca_input, transformed_fishes, n_components, n_fishes, principal_component_index):
+def print_min_max_fishes(pca_object, pca_input, transformed_fishes, n_fishes, principal_component_index):
     sorted_fishes = transformed_fishes[:, principal_component_index].argsort()
     # plt.hist(transformed_fishes[:,principal_component_index],bins=30)
     plt.show()
@@ -44,14 +45,15 @@ def print_min_max_fishes(pca_object, pca_input, transformed_fishes, n_components
 
     print(f"The {n_fishes} Fishes with the MINIMUM Values in Principal Component #{principal_component_index}")
     for n in min_fishes:
-        print_reconstruction_compare(pca_object, pca_input, transformed_fishes, n_components, n)
+        print_reconstruction_compare(pca_object, pca_input, transformed_fishes, n)
 
     print(f"The {n_fishes} Fishes with the MAXIMUM Values in Principal Component #{principal_component_index}")
     for n in max_fishes:
-        print_reconstruction_compare(pca_object, pca_input, transformed_fishes, n_components, n)
+        print_reconstruction_compare(pca_object, pca_input, transformed_fishes, n)
 
 
-def print_variance_plot(pca_object, n_components):
+def print_variance_plot(pca_object):
+    n_components = pca_object.n_components
     plt.bar(range(1, n_components + 1), pca_object.explained_variance_ratio_)
     plt.title(f"Explained Variance by the {n_components} Principal Components")
     text = [f"PC #{i}" for i in range(1, n_components + 1)]
@@ -59,7 +61,9 @@ def print_variance_plot(pca_object, n_components):
     plt.show()
 
 
-def print_pc_wiggle_effects(pca_object, transformed_fishes, n_components, figsize):
+def print_pc_wiggle_effects(pca_object, transformed_fishes):
+    n_components = pca_object.n_components
+    figsize = [3.7 * n_components, 18]
     mean_fish = np.zeros((n_components,))
     fig, axes = plt.subplots(ncols=5, nrows=n_components)
     fig.set_figheight(val=figsize[0])
@@ -99,18 +103,15 @@ def nice_pca_infos(pca_input, n_components):
 
     # Varianz-Verteilungs-Plot
     # TODO Farbig machen mit infos aus unserer halbsubjektiven Bewertung
-    print_variance_plot(fish_pca, n_components)
+    print_variance_plot(fish_pca)
 
     # Mean-Fisch wackeln lassen
-    goodFigsize = [3.7 * n_components, 18]
-    print_pc_wiggle_effects(n_components=n_components, pca_object=fish_pca, transformed_fishes=transformed_fishes,
-                            figsize=goodFigsize)
+    print_pc_wiggle_effects(pca_object=fish_pca, transformed_fishes=transformed_fishes)
 
     # Die extremsten Fische bezügliche einer Hauptkomponente printen lassen
     print_min_max_fishes(pca_object=fish_pca,
                          pca_input=pca_input,
                          transformed_fishes=transformed_fishes,
-                         n_components=n_components,
                          n_fishes=2,
                          principal_component_index=0)
 
