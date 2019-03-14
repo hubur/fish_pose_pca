@@ -7,7 +7,6 @@ import numpy as np
 import copy
 import statistics
 import pca
-import fishy
 
 def save_video_frames(parameters: List, fun: Callable, out_folder: str):
     """calls fun for each item in parameters and saves the
@@ -22,17 +21,36 @@ def save_video_frames(parameters: List, fun: Callable, out_folder: str):
         plt.savefig(str(out_path / frame_name))
 
 
+def plot_fish(axis, xy_array):
+    half = xy_array.shape[0] // 2
+    X, Y = xy_array[:half], xy_array[half:]
+    # Adding the first point again at the back to close the loop
+    X, Y = np.concatenate((X, X[0:1])), np.concatenate((Y, Y[0:1]))
+    # "k-" means solid black line
+    axis.plot(X, Y, 'k-')
+    axis.plot(X[1:-1], Y[1:-1], 'rd')
+    axis.plot(X[0], Y[0], 'gD')
+
 def print_reconstruction_compare(pca_object, pca_input, transformed_fishes, fish_index):
     n_components = pca_object.n_components
+    figsize = [9, 18]
+
     fig, axes = plt.subplots(ncols=2, nrows=1, sharey=True)
-    old, new = fishy.get_fish_on_canvas(xy_array=pca_input[fish_index]), fishy.get_fish_on_canvas(
-        xy_array=pca_object.inverse_transform(transformed_fishes[fish_index]))
-    fig.set_figwidth(val=15)
-    fig.set_figheight(val=18)
-    axes[0].imshow(old, cmap="gray")
-    axes[1].imshow(new, cmap="gray")
+
+    fig.set_figheight(val=figsize[0])
+    fig.set_figwidth(val=figsize[1])
+    axes[0].set_xlim([-75, 75])
+    axes[0].set_ylim([-75, 75])
+    axes[1].set_xlim([-75, 75])
+    axes[1].set_ylim([-75, 75])
+
+    old, new = pca_input[fish_index], pca_object.inverse_transform(transformed_fishes[fish_index])
+    plot_fish(axes[0], old)
+    plot_fish(axes[1], new)
+
     axes[0].set_title("original")
     axes[1].set_title(f"reconstructed from {n_components} Principal Components")
+
     plt.show()
 
 
@@ -78,9 +96,10 @@ def print_pc_wiggle_effects(pca_object, transformed_fishes):
             modified_mean_fish = copy.copy(mean_fish)
             modified_mean_fish[i] = factor
             mod = pca_object.inverse_transform(modified_mean_fish)
-            mod = fishy.get_fish_on_canvas(xy_array=mod, canvas_size=(150, 150))
-            axes[i, j].imshow(mod, cmap="gray")
-
+            axes[i, j].set_xlim([-50, 50])
+            axes[i, j].set_ylim([-50, 50])
+            # "k-" means solid black line
+            plot_fish(axes[i, j], mod)
             if i == 0:
                 axes[0, j].set_title(topText[j])
 
