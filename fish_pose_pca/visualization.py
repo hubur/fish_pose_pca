@@ -56,17 +56,21 @@ def print_reconstruction_compare(pca_object, pca_input, transformed_fishes, fish
 
 def print_min_max_fishes(pca_object, pca_input, transformed_fishes, n_fishes, principal_component_index):
     sorted_fishes = transformed_fishes[:, principal_component_index].argsort()
-    # plt.hist(transformed_fishes[:,principal_component_index],bins=30)
+    print(f"Data distributution along PC #{principal_component_index}")
+    print(len(transformed_fishes))
+    plt.hist(transformed_fishes[:,principal_component_index],bins=len(transformed_fishes)//30)
     plt.show()
     min_fishes = sorted_fishes[:n_fishes]
     max_fishes = sorted_fishes[-n_fishes:][::-1]
 
     print(f"The {n_fishes} Fishes with the MINIMUM Values in Principal Component #{principal_component_index}")
     for n in min_fishes:
+        print(f"PC #{principal_component_index}:{transformed_fishes[n,principal_component_index]}")
         print_reconstruction_compare(pca_object, pca_input, transformed_fishes, n)
 
     print(f"The {n_fishes} Fishes with the MAXIMUM Values in Principal Component #{principal_component_index}")
     for n in max_fishes:
+        print(f"PC #{principal_component_index}:{transformed_fishes[n,principal_component_index]}")
         print_reconstruction_compare(pca_object, pca_input, transformed_fishes, n)
 
 
@@ -90,11 +94,11 @@ def print_pc_wiggle_effects(pca_object, transformed_fishes):
     topText = ["-2 Std.Dev.", "-1 Std.Dev.", "Mean Fish", "+1 Std.Dev.", "+2 Std.Dev."]
     for i, _ in enumerate(axes):
         stdev_for_this_pc = statistics.stdev(transformed_fishes[:, i])
+        factors = np.array([-2,-1,0,1,2])*stdev_for_this_pc
         for j, _ in enumerate(axes[i]):
-            factor = (j - 2) * stdev_for_this_pc
 
             modified_mean_fish = copy.copy(mean_fish)
-            modified_mean_fish[i] = factor
+            modified_mean_fish[i] = factors[j]
             mod = pca_object.inverse_transform(modified_mean_fish)
             axes[i, j].set_xlim([-50, 50])
             axes[i, j].set_ylim([-50, 50])
@@ -121,7 +125,6 @@ def nice_pca_infos(pca_input, n_components):
     # = fish_pca.fit_transform(pca_input)
 
     # Varianz-Verteilungs-Plot
-    # TODO Farbig machen mit infos aus unserer halbsubjektiven Bewertung
     print_variance_plot(fish_pca)
 
     # Mean-Fisch wackeln lassen
@@ -133,7 +136,3 @@ def nice_pca_infos(pca_input, n_components):
                          transformed_fishes=transformed_fishes,
                          n_fishes=2,
                          principal_component_index=0)
-
-    # Irgendwas mit Slidern
-
-    # return?
