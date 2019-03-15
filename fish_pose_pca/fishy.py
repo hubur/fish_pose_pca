@@ -7,6 +7,7 @@ import cv2
 import math
 import copy
 import config
+from scipy import interpolate
 
 
 class FishBlob:
@@ -66,6 +67,19 @@ class FishBlob:
             selector = sorted(random.sample(range(0, self.length), new_size))
             self.X, self.Y = self.X[selector], self.Y[selector]
             self.length = new_size
+        elif subfish_method == config.SubFishMethod.CUBIC_INTERPOLATE:
+            # Adding the first point again at the back to get a closed loop
+            X, Y = np.concatenate((self.X, self.X[0:1])), np.concatenate((self.Y, self.Y[0:1]))
+            contour_like_xy_array = np.array([X,Y]).T
+
+            # Linear length along the line:
+            distance = np.cumsum(np.sqrt(np.sum(np.diff(contour_like_xy_array, axis=0) ** 2, axis=1)))
+            distance = np.insert(distance, 0, 0) / distance[-1]
+
+            interpolator = interpolate.interp1d(distance, contour_like_xy_array, kind="quadratic", axis=0)
+            interpolated_points = interpolator(np.linspace(0, 1, new_size))
+
+            self.X, self.Y = interpolated_points.T
         else:
             raise NotImplementedError(subfish_method)
 
