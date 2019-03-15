@@ -1,6 +1,5 @@
 """object representation of a fish blob and surrounding utlity."""
 
-from load_contours import load_contours
 import numpy as np
 import random
 import cv2
@@ -109,6 +108,7 @@ class FishBlob:
 
 def get_fish_on_canvas(fish_blob: FishBlob = None, xy_array: np.ndarray = None, canvas_size=(200, 200)):
     """
+    This function should not have to be used. Use the functions from visualization.py instead
     canvasSize = (y size, x size)
 
     """
@@ -124,13 +124,3 @@ def get_fish_on_canvas(fish_blob: FishBlob = None, xy_array: np.ndarray = None, 
         X, Y = xy_array[:half] + np.array([canvas_size[1] // 2]), xy_array[half:] + np.array([canvas_size[0] // 2])
         canvas[Y.astype(int), X.astype(int)] = 255
     return canvas
-
-
-def get_normalized_fish_blobs_from_data(data_path, mask_path):
-    data = load_contours(path=data_path, mask_path=mask_path)
-    all_blobs = []
-    for d in data:
-        fish = FishBlob(np.array(d.xs), np.array(d.ys), np.array([d.c_x, d.c_y]))
-        fish.normalize()
-        all_blobs.append(fish)
-    return all_blobs
