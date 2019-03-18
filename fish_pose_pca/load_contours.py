@@ -10,7 +10,7 @@ def poly_area(x, y):
     return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
 
-def load_biotracker_export(path: str = None, mask_path: str = None, threshold: float = None):
+def load_biotracker_export(path: str = None, mask_path: str = None, threshold: float = None, max_lines = None):
     """load contours, centroids and frame metadata from biotracker export.
     Args:
         path:      path of exported jsonl file
@@ -41,32 +41,33 @@ def load_biotracker_export(path: str = None, mask_path: str = None, threshold: f
 
     areas = []
     too_small = 0
-    for frame_id, line in enumerate(lines):
-        for data in json.loads(line):
+    if max_lines:
+        lines = lines[:max_lines]
+    for line in lines:
+        data = json.loads(line)
 
-            X = np.array([d["x"] for d in data])
-            Y = np.array([d["y"] for d in data])
-            areas.append(poly_area(X, Y))
+        X = np.array(data["xs"])
+        Y = np.array(data["ys"])
+        areas.append(poly_area(X, Y))
 
-            x_centroid = np.mean(X)
-            y_centroid = np.mean(Y)
+        x_centroid = data["center_x"]
+        y_centroid = data["center_y"]
 
-            outside_arena = mask_path and arena_mask[int(y_centroid), int(x_centroid)] == 0
-            if outside_arena or poly_area(X, Y) < threshold:
-                too_small += 1
-                continue
+        outside_arena = mask_path and arena_mask[int(y_centroid), int(x_centroid)] == 0
 
-            contours.append((X, Y))
-            centroids.append(np.array([x_centroid, y_centroid]))
-            # TODO: Get real track_index
-            track_index = 0
-            metadata.append((frame_id, track_index))
+        if outside_arena or poly_area(X, Y) < threshold:
+            too_small += 1
+            continue
 
-    #print(f"mean area {sum(areas) / len(areas)}")
-    #print(f"extrem    {min(areas), max(areas)}")
-    #print(f"too_small {too_small /(len(contours) + too_small)}")
+        contours.append((X, Y))
+        centroids.append(np.array([x_centroid, y_centroid]))
+        metadata.append((data["frame"], data["track"]))
+
+    print(f"mean area {sum(areas) / len(areas)}")
+    print(f"extreme   {min(areas), max(areas)}")
+    print(f"too_small {too_small /(len(contours) + too_small)}")
     #import matplotlib.pyplot as plt
     #plt.hist(areas, bins=40)
     #plt.show()
-    #assert (len(contours) == len(centroids) == len(metadata))
+    assert (len(contours) == len(centroids) == len(metadata))
     return contours, centroids, metadata
