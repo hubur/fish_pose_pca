@@ -66,7 +66,7 @@ class FishBlob:
             selector = sorted(random.sample(range(0, self.length), new_size))
             self.X, self.Y = self.X[selector], self.Y[selector]
             self.length = new_size
-        elif subfish_method == config.SubFishMethod.CUBIC_INTERPOLATE:
+        elif subfish_method == config.SubFishMethod.QUADRATIC_INTERPOLATE:
             # Adding the first point again at the back to get a closed loop
             X, Y = np.concatenate((self.X, self.X[0:1])), np.concatenate((self.Y, self.Y[0:1]))
             contour_like_xy_array = np.array([X,Y]).T
@@ -79,6 +79,7 @@ class FishBlob:
             interpolated_points = interpolator(np.linspace(0, 1, new_size))
 
             self.X, self.Y = interpolated_points.T
+            self.length = new_size
         else:
             raise NotImplementedError(subfish_method)
 

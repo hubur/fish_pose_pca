@@ -36,7 +36,7 @@ class RotationMethod:
 
 class SubFishMethod:
     RANDOM_SUBSET = "random_subset"
-    CUBIC_INTERPOLATE = "cubic_interpolate"
+    QUADRATIC_INTERPOLATE = "quadratic_interpolate"
 
 
 def _access_config(key):
