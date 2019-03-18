@@ -14,7 +14,7 @@ def poly_area(x, y):
 
 def _get_middle_chunk(areas, threshold=0.2):
     bin_heights, bin_borders, _ = plt.hist(areas, bins=30)
-    # plt.show()
+    #plt.show()
     peak_bins = sig.argrelmax(bin_heights, mode="wrap")[0]
     valley_bins = sig.argrelmin(bin_heights, mode="wrap")[0]
 
@@ -43,6 +43,7 @@ def _get_middle_chunk(areas, threshold=0.2):
         [triple for triple in big_bin_borders if bin_heights[triple[1]] > high_enough])
 
     # This does not use the full potential of the Idea of this function
+    # You could also eliminate noise between two extreme peaks, but then this does not give the "middle chunk" anymore
     low_thresh = bin_borders[high_enough_big_bin_borders[0, 0]]
     high_thresh = bin_borders[high_enough_big_bin_borders[-1, 2] + 1]
     return low_thresh, high_thresh
@@ -86,7 +87,7 @@ def load_biotracker_export(path: str = None, mask_path: str = None, threshold: f
 
         X = np.array(data["xs"])
         Y = np.array(data["ys"])
-        areas.append(poly_area(X, Y))
+
 
         x_centroid = data["center_x"]
         y_centroid = data["center_y"]
@@ -94,8 +95,9 @@ def load_biotracker_export(path: str = None, mask_path: str = None, threshold: f
         outside_arena = mask_path and arena_mask[int(y_centroid), int(x_centroid)] == 0
         if outside_arena or poly_area(X, Y) < threshold:
             too_small += 1
-            areas.pop()
             continue
+        else:
+            areas.append(poly_area(X, Y))
 
         contours.append((X, Y))
         centroids.append(np.array([x_centroid, y_centroid]))
@@ -106,8 +108,7 @@ def load_biotracker_export(path: str = None, mask_path: str = None, threshold: f
     #print(f"too_small {too_small /(len(contours) + too_small)}")
     low, high = _get_middle_chunk(areas)
     selector = [i for i, area in enumerate(areas) if low <= area <= high]
-    print(len(selector),len(contours))
-    contours, centroids, metadata = np.array(contours)[selector], np.array(centroids)[selector], np.array(metadata)[selector]
 
+    contours, centroids, metadata = np.array(contours)[selector], np.array(centroids)[selector], np.array(metadata)[selector]
     assert (len(contours) == len(centroids) == len(metadata))
     return contours, centroids, metadata
