@@ -3,11 +3,49 @@ import json
 import numpy as np
 import cv2
 import config
+import matplotlib.pyplot as plt
+import scipy.signal as sig
 
 
 def poly_area(x, y):
     """calculate polygon area using shoelace formula"""
     return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+
+
+def _get_middle_chunk(areas, threshold=0.2):
+    bin_heights, bin_borders, _ = plt.hist(areas, bins=30)
+    # plt.show()
+    peak_bins = sig.argrelmax(bin_heights, mode="wrap")[0]
+    valley_bins = sig.argrelmin(bin_heights, mode="wrap")[0]
+
+    peak_valley_map = np.zeros((len(bin_heights),))
+    peak_valley_map[peak_bins] += 1
+    peak_valley_map[valley_bins] -= 1
+    valley_comes_first = peak_bins[0] < valley_bins[0]
+    if valley_comes_first:
+        peak_valley_map[0] = 0
+
+    # List of triples: (left border bin index, peak bin index  right border bin index)
+    big_bin_borders = np.zeros((len(peak_bins) + 1, 3), dtype=int)
+
+    i = 0
+    for j, val in enumerate(peak_valley_map):
+        if val == -1:
+            big_bin_borders[i, 2] = j
+            i += 1
+            big_bin_borders[i, 0] = j
+        elif val == 1:
+            big_bin_borders[i, 1] = j
+
+    high_enough = threshold * bin_heights[np.argmax(bin_heights)]
+    # print(high_enough_big_bin_borders[0])
+    high_enough_big_bin_borders = np.array(
+        [triple for triple in big_bin_borders if bin_heights[triple[1]] > high_enough])
+
+    # This does not use the full potential of the Idea of this function
+    low_thresh = bin_borders[high_enough_big_bin_borders[0, 0]]
+    high_thresh = bin_borders[high_enough_big_bin_borders[-1, 2] + 1]
+    return low_thresh, high_thresh
 
 
 def load_biotracker_export(path: str = None, mask_path: str = None, threshold: float = None, max_lines = None):
@@ -54,20 +92,22 @@ def load_biotracker_export(path: str = None, mask_path: str = None, threshold: f
         y_centroid = data["center_y"]
 
         outside_arena = mask_path and arena_mask[int(y_centroid), int(x_centroid)] == 0
-
         if outside_arena or poly_area(X, Y) < threshold:
             too_small += 1
+            areas.pop()
             continue
 
         contours.append((X, Y))
         centroids.append(np.array([x_centroid, y_centroid]))
         metadata.append((data["frame"], data["track"]))
 
-    print(f"mean area {sum(areas) / len(areas)}")
-    print(f"extreme   {min(areas), max(areas)}")
-    print(f"too_small {too_small /(len(contours) + too_small)}")
-    #import matplotlib.pyplot as plt
-    #plt.hist(areas, bins=40)
-    #plt.show()
+    #print(f"mean area {sum(areas) / len(areas)}")
+    #print(f"extrem    {min(areas), max(areas)}")
+    #print(f"too_small {too_small /(len(contours) + too_small)}")
+    low, high = _get_middle_chunk(areas)
+    selector = [i for i, area in enumerate(areas) if low <= area <= high]
+    print(len(selector),len(contours))
+    contours, centroids, metadata = np.array(contours)[selector], np.array(centroids)[selector], np.array(metadata)[selector]
+
     assert (len(contours) == len(centroids) == len(metadata))
     return contours, centroids, metadata
