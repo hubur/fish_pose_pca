@@ -5,6 +5,11 @@ import cv2
 import config
 
 
+def poly_area(x, y):
+    """calculate polygon area using shoelace formula"""
+    return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+
+
 def load_biotracker_export(path: str = None, mask_path: str = None, threshold: float = None):
     """load contours, centroids and frame metadata from biotracker export.
     Args:
@@ -34,17 +39,21 @@ def load_biotracker_export(path: str = None, mask_path: str = None, threshold: f
     metadata = []
     min_points = config.get_min_contour_points()
 
+    areas = []
+    too_small = 0
     for frame_id, line in enumerate(lines):
         for data in json.loads(line):
 
             X = np.array([d["x"] for d in data])
             Y = np.array([d["y"] for d in data])
+            areas.append(poly_area(X, Y))
 
             x_centroid = np.mean(X)
             y_centroid = np.mean(Y)
 
             outside_arena = mask_path and arena_mask[int(y_centroid), int(x_centroid)] == 0
-            if outside_arena or len(X) < min_points:
+            if outside_arena or poly_area(X, Y) < threshold:
+                too_small += 1
                 continue
 
             contours.append((X, Y))
@@ -53,5 +62,11 @@ def load_biotracker_export(path: str = None, mask_path: str = None, threshold: f
             track_index = 0
             metadata.append((frame_id, track_index))
 
-    assert (len(contours) == len(centroids) == len(metadata))
+    #print(f"mean area {sum(areas) / len(areas)}")
+    #print(f"extrem    {min(areas), max(areas)}")
+    #print(f"too_small {too_small /(len(contours) + too_small)}")
+    #import matplotlib.pyplot as plt
+    #plt.hist(areas, bins=40)
+    #plt.show()
+    #assert (len(contours) == len(centroids) == len(metadata))
     return contours, centroids, metadata
