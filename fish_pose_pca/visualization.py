@@ -7,6 +7,7 @@ import numpy as np
 import copy
 import statistics
 import pca
+import config
 
 def save_video_frames(parameters: List, fun: Callable, out_folder: str):
     """calls fun for each item in parameters and saves the
@@ -31,19 +32,26 @@ def _plot_fish(axis, xy_array):
     axis.plot(X[1:-1], Y[1:-1], 'rd')
     axis.plot(X[0], Y[0], 'gD')
 
-
 def _print_reconstruction_compare(pca_object, pca_input, transformed_fishes, fish_index):
     n_components = pca_object.n_components
     figsize = [9, 18]
+    coordinate_system = config.get_coordinate_system()
+    if coordinate_system == config.CoordinateSystem.CARTESIAN_SYSTEM:
+        dct = None
+    elif coordinate_system == config.CoordinateSystem.POLAR_SYSTEM:
+        dct = dict(polar=True)
+    else:
+        raise NotImplementedError(coordinate_system)
 
-    fig, axes = plt.subplots(ncols=2, nrows=1, sharey=True)
+    fig, axes = plt.subplots(ncols=2, nrows=1, sharey=True, subplot_kw=dct)
 
     fig.set_figheight(val=figsize[0])
     fig.set_figwidth(val=figsize[1])
-    axes[0].set_xlim([-75, 75])
-    axes[0].set_ylim([-75, 75])
-    axes[1].set_xlim([-75, 75])
-    axes[1].set_ylim([-75, 75])
+    if coordinate_system == config.CoordinateSystem.CARTESIAN_SYSTEM:
+        axes[0].set_xlim([-75, 75])
+        axes[0].set_ylim([-75, 75])
+        axes[1].set_xlim([-75, 75])
+        axes[1].set_ylim([-75, 75])
 
     old, new = pca_input[fish_index], pca_object.inverse_transform(transformed_fishes[fish_index])
     _plot_fish(axes[0], old)
@@ -92,7 +100,16 @@ def print_pc_wiggle_effects(pca_object, transformed_fishes):
     n_components = pca_object.n_components
     figsize = [3.7 * n_components, 18]
     mean_fish = np.zeros((n_components,))
-    fig, axes = plt.subplots(ncols=5, nrows=n_components)
+
+    coordinate_system = config.get_coordinate_system()
+    if coordinate_system == config.CoordinateSystem.CARTESIAN_SYSTEM:
+        dct = None
+    elif coordinate_system == config.CoordinateSystem.POLAR_SYSTEM:
+        dct = dict(polar=True)
+    else:
+        raise NotImplementedError(coordinate_system)
+
+    fig, axes = plt.subplots(ncols=5, nrows=n_components, subplot_kw=dct)
     fig.set_figheight(val=figsize[0])
     fig.set_figwidth(val=figsize[1])
     fig.subplots_adjust(wspace=0, hspace=0)
@@ -105,8 +122,11 @@ def print_pc_wiggle_effects(pca_object, transformed_fishes):
             modified_mean_fish = copy.copy(mean_fish)
             modified_mean_fish[i] = factors[j]
             mod = pca_object.inverse_transform(modified_mean_fish)
-            axes[i, j].set_xlim([-50, 50])
-            axes[i, j].set_ylim([-50, 50])
+
+            if coordinate_system == config.CoordinateSystem.CARTESIAN_SYSTEM:
+                axes[i, j].set_xlim([-50, 50])
+                axes[i, j].set_ylim([-50, 50])
+
             # "k-" means solid black line
             _plot_fish(axes[i, j], mod)
             if i == 0:
@@ -116,6 +136,7 @@ def print_pc_wiggle_effects(pca_object, transformed_fishes):
                 axes[i, 0].set_ylabel(f"PC #{i+1}")
                 axes[i, 0].get_yaxis().set_ticks([])
             else:
+                pass
                 axes[i, j].get_yaxis().set_visible(False)
 
             axes[i, j].get_xaxis().set_visible(False)

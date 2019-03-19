@@ -96,6 +96,9 @@ class FishBlob:
         translation_method = config.get_translation_method()
         if translation_method == config.TranslationMethod.CENTER_OF_MASS_ON_ZERO:
             self.translate(vector=-1 * self.centroid)
+        elif translation_method == config.TranslationMethod.CENTER_OF_MASS_ON_X100:
+            self.translate(vector=-1 * self.centroid)
+            self.translate(vector=np.array([100, 0]))
         else:
             raise NotImplementedError(translation_method)
 

@@ -20,6 +20,7 @@ _TRANSLATION_METHOD = "translation_method"
 _ROTATION_METHOD = "rotation_method"
 _SUBFISH_SIZE = "subfish_size"
 _SUBFISH_METHOD = "subfish_method"
+_COORDINATE_SYSTEM = "coordinate_system"
 
 
 class ContourStart:
@@ -28,7 +29,7 @@ class ContourStart:
 
 class TranslationMethod:
     CENTER_OF_MASS_ON_ZERO = "center_of_mass_on_zero"
-
+    CENTER_OF_MASS_ON_X100 = "center_of_mass_on_x100"
 
 class RotationMethod:
     MOST_DISTANT_POINT_AND_CENTER_ON_LINE = "most_distant_point_and_center_on_line"
@@ -37,6 +38,11 @@ class RotationMethod:
 class SubFishMethod:
     RANDOM_SUBSET = "random_subset"
     QUADRATIC_INTERPOLATE = "quadratic_interpolate"
+
+
+class CoordinateSystem:
+    CARTESIAN_SYSTEM = "cartesian_system"
+    POLAR_SYSTEM = "polar_system"
 
 
 def _access_config(key):
@@ -75,7 +81,8 @@ def create_config(config_path, config_dict=None):
             _TRANSLATION_METHOD: TranslationMethod.CENTER_OF_MASS_ON_ZERO,
             _ROTATION_METHOD: RotationMethod.MOST_DISTANT_POINT_AND_CENTER_ON_LINE,
             _SUBFISH_METHOD: SubFishMethod.RANDOM_SUBSET,
-            _SUBFISH_SIZE: 45
+            _SUBFISH_SIZE: 45,
+            _COORDINATE_SYSTEM: CoordinateSystem.CARTESIAN_SYSTEM
         }
     config_path = str(config_path)
     with open(config_path, mode="w") as c:
@@ -116,3 +123,7 @@ def get_subfish_method():
 
 def get_subfish_size():
     return _access_config(_SUBFISH_SIZE)
+
+
+def get_coordinate_system():
+    return _access_config(_COORDINATE_SYSTEM)

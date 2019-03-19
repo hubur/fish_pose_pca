@@ -48,7 +48,7 @@ def _get_middle_chunk(areas, threshold=0.2):
     return low_thresh, high_thresh
 
 
-def load_biotracker_export(path: str = None, mask_path: str = None, threshold: float = None, max_lines = None):
+def load_biotracker_export(path: str = None, mask_path: str = None, threshold: float = None, max_lines=10000):
     """load contours, centroids and frame metadata from biotracker export.
     Args:
         path:      path of exported jsonl file
