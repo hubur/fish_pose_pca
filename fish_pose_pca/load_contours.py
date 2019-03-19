@@ -3,8 +3,8 @@ import json
 import numpy as np
 import cv2
 import config
-import matplotlib.pyplot as plt
 import scipy.signal as sig
+from shapely.geometry import Polygon
 
 
 def poly_area(x, y):
@@ -87,12 +87,14 @@ def load_biotracker_export(path: str = None, mask_path: str = None, threshold: f
         X = np.array(data["xs"])
         Y = np.array(data["ys"])
 
+        coords = [xy for xy in zip(X, Y)]
+        polygon = Polygon(coords)
 
-        x_centroid = data["center_x"]
-        y_centroid = data["center_y"]
+        x_centroid = int(polygon.centroid.x)
+        y_centroid = int(polygon.centroid.y)
 
         outside_arena = mask_path and arena_mask[int(y_centroid), int(x_centroid)] == 0
-        if outside_arena or poly_area(X, Y) < threshold:
+        if outside_arena or polygon.area < threshold:
             too_small += 1
             continue
         else:
