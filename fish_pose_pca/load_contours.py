@@ -13,8 +13,7 @@ def poly_area(x, y):
 
 
 def _get_middle_chunk(areas, threshold=0.2):
-    bin_heights, bin_borders, _ = plt.hist(areas, bins=30)
-    # plt.show()
+    bin_heights, bin_borders = np.histogram(areas, bins=30)
     peak_bins = sig.argrelmax(bin_heights, mode="wrap")[0]
     valley_bins = sig.argrelmin(bin_heights, mode="wrap")[0]
 
