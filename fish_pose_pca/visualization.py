@@ -21,7 +21,7 @@ def save_video_frames(parameters: List, fun: Callable, out_folder: str):
         plt.savefig(str(out_path / frame_name))
 
 
-def plot_fish(axis, xy_array):
+def _plot_fish(axis, xy_array):
     half = xy_array.shape[0] // 2
     X, Y = xy_array[:half], xy_array[half:]
     # Adding the first point again at the back to close the loop
@@ -31,7 +31,8 @@ def plot_fish(axis, xy_array):
     axis.plot(X[1:-1], Y[1:-1], 'rd')
     axis.plot(X[0], Y[0], 'gD')
 
-def print_reconstruction_compare(pca_object, pca_input, transformed_fishes, fish_index):
+
+def _print_reconstruction_compare(pca_object, pca_input, transformed_fishes, fish_index):
     n_components = pca_object.n_components
     figsize = [9, 18]
 
@@ -45,14 +46,18 @@ def print_reconstruction_compare(pca_object, pca_input, transformed_fishes, fish
     axes[1].set_ylim([-75, 75])
 
     old, new = pca_input[fish_index], pca_object.inverse_transform(transformed_fishes[fish_index])
-    plot_fish(axes[0], old)
-    plot_fish(axes[1], new)
+    _plot_fish(axes[0], old)
+    _plot_fish(axes[1], new)
 
     axes[0].set_title("original")
     axes[1].set_title(f"reconstructed from {n_components} Principal Components")
 
     plt.show()
 
+
+def print_fishes_by_index(pca_object, pca_input, transformed_fishes, index_list):
+    for i in index_list:
+        _print_reconstruction_compare(pca_object, pca_input, transformed_fishes, i)
 
 def print_min_max_fishes(pca_object, pca_input, transformed_fishes, n_fishes, principal_component_index):
     sorted_fishes = transformed_fishes[:, principal_component_index].argsort()
@@ -66,12 +71,12 @@ def print_min_max_fishes(pca_object, pca_input, transformed_fishes, n_fishes, pr
     print(f"The {n_fishes} Fishes with the MINIMUM Values in Principal Component #{principal_component_index}")
     for n in min_fishes:
         print(f"PC #{principal_component_index}:{transformed_fishes[n,principal_component_index]}")
-        print_reconstruction_compare(pca_object, pca_input, transformed_fishes, n)
+        _print_reconstruction_compare(pca_object, pca_input, transformed_fishes, n)
 
     print(f"The {n_fishes} Fishes with the MAXIMUM Values in Principal Component #{principal_component_index}")
     for n in max_fishes:
         print(f"PC #{principal_component_index}:{transformed_fishes[n,principal_component_index]}")
-        print_reconstruction_compare(pca_object, pca_input, transformed_fishes, n)
+        _print_reconstruction_compare(pca_object, pca_input, transformed_fishes, n)
 
 
 def print_variance_plot(pca_object):
@@ -103,7 +108,7 @@ def print_pc_wiggle_effects(pca_object, transformed_fishes):
             axes[i, j].set_xlim([-50, 50])
             axes[i, j].set_ylim([-50, 50])
             # "k-" means solid black line
-            plot_fish(axes[i, j], mod)
+            _plot_fish(axes[i, j], mod)
             if i == 0:
                 axes[0, j].set_title(topText[j])
 
