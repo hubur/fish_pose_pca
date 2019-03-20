@@ -1,12 +1,12 @@
 """utilities for visualizing data"""
+import copy
+import statistics
+
 from pathlib import Path
 from typing import Callable, List
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
 import numpy as np
-import copy
-import statistics
-import pca
+
 import config
 
 def save_video_frames(parameters: List, fun: Callable, out_folder: str):
@@ -28,9 +28,12 @@ def _plot_fish(axis, xy_array):
     # Adding the first point again at the back to close the loop
     X, Y = np.concatenate((X, X[0:1])), np.concatenate((Y, Y[0:1]))
     # "k-" means solid black line
+    axis.plot([-40, 40], [0, 0], 'k--', alpha=0.5)
+    axis.plot([0, 0], [-40, 40], 'k--', alpha=0.5)
     axis.plot(X, Y, 'k-')
     axis.plot(X[1:-1], Y[1:-1], 'rd')
     axis.plot(X[0], Y[0], 'gD')
+
 
 def _print_reconstruction_compare(pca_object, pca_input, transformed_fishes, fish_index):
     n_components = pca_object.n_components
@@ -57,7 +60,7 @@ def _print_reconstruction_compare(pca_object, pca_input, transformed_fishes, fis
     _plot_fish(axes[0], old)
     _plot_fish(axes[1], new)
 
-    axes[0].set_title("original")
+    axes[0].set_title(f"original {transformed_fishes[fish_index]}")
     axes[1].set_title(f"reconstructed from {n_components} Principal Components")
 
     plt.show()
@@ -142,23 +145,3 @@ def print_pc_wiggle_effects(pca_object, transformed_fishes):
             axes[i, j].get_xaxis().set_visible(False)
 
     plt.show()
-
-
-def nice_pca_infos(pca_input, n_components):
-    # PCA-Objekt bauen
-    transformed_fishes, fish_pca = pca.transform_fishes(n_components=n_components)
-    # PCA(n_components=n_components)
-    # = fish_pca.fit_transform(pca_input)
-
-    # Varianz-Verteilungs-Plot
-    print_variance_plot(fish_pca)
-
-    # Mean-Fisch wackeln lassen
-    print_pc_wiggle_effects(pca_object=fish_pca, transformed_fishes=transformed_fishes)
-
-    # Die extremsten Fische bezügliche einer Hauptkomponente printen lassen
-    print_min_max_fishes(pca_object=fish_pca,
-                         pca_input=pca_input,
-                         transformed_fishes=transformed_fishes,
-                         n_fishes=2,
-                         principal_component_index=0)
